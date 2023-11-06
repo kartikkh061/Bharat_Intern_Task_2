@@ -1,0 +1,100 @@
+# Importing the Various Libraries
+import tensorflow as tf
+from tensorflow import keras
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Loading and Preprocessing our MNIST Dataset
+(x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
+x_train[0]
+print("Number of training samples:", len(x_train))
+print("Number of testing samples:", len(x_test))
+print("Shape of an individual sample:", x_train[0].shape)
+
+# Visualizing the Sample Image
+plt.figure(figsize=(5, 5))
+plt.imshow(x_train[2], cmap='gray')
+plt.title(f"Label: {y_train[0]}")
+plt.axis('off')
+plt.show()
+x_train = x_train / 255
+x_test = x_test / 255
+x_train[0]
+
+# Flattening the Data
+x_train_flattened = x_train.reshape(len(x_train), -1)
+x_test_flattened = x_test.reshape(len(x_test), -1)
+
+# Building and Compiling the Simple Model
+model = keras.Sequential([
+    keras.layers.Dense(10, input_shape=(784,), activation='sigmoid')
+])
+
+model.compile(
+    optimizer='adam',
+    loss='sparse_categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+# Train the Model
+model.fit(x_train_flattened, y_train, epochs=5)
+
+# Evaluating the Model on test Data
+test_loss, test_accuracy = model.evaluate(x_test_flattened, y_test)
+print(f"Test loss: {test_loss:.4f}, Test accuracy: {test_accuracy:.4f}")
+model.fit(x_train_flattened, y_train, epochs=5)
+
+# Making the Predictions on Test Data
+y_predicted = model.predict(x_test_flattened)
+y_predicted_labels = [np.argmax(i) for i in y_predicted]
+
+# Creating the Confusion Matrix
+cm = tf.math.confusion_matrix(labels=y_test, predictions=y_predicted_labels)
+
+# Plotting the Confusion Matrix
+import seaborn as sn
+plt.figure(figsize=(10, 7))
+sn.heatmap(cm, annot=True, fmt='d')
+plt.xlabel('Predicted')
+plt.ylabel('Truth')
+plt.title('Confusion Matrix')
+plt.show()
+
+# Building and compiling the Model with Hidden layers
+model_with_hidden = keras.Sequential([
+    keras.layers.Dense(100, input_shape=(784,), activation='relu'),
+    keras.layers.Dense(10, activation='sigmoid')
+])
+
+model_with_hidden.compile(
+    optimizer='adam',
+    loss='sparse_categorical_crossentropy',
+    metrics=['accuracy']
+)
+# Train the Model with Hidden Layer
+model_with_hidden.fit(x_train_flattened, y_train, epochs=5)
+
+# Evaluating the model with hidden layer on Test Data
+hidden_test_loss, hidden_test_accuracy = model_with_hidden.evaluate(x_test_flattened, y_test)
+print(f"Test accuracy with hidden layer: {hidden_test_accuracy:.4f}")
+
+# Displaying the Sample Predictions
+sample_indices = np.random.randint(0, len(x_test), size=5)
+sample_images = x_test[sample_indices]
+sample_labels = y_test[sample_indices]
+
+# Flatten the sample images
+sample_images_flattened = sample_images.reshape(len(sample_images), -1)
+sample_predictions = model_with_hidden.predict(sample_images_flattened)
+predicted_classes = np.argmax(sample_predictions, axis=1)
+
+# Displaying the Sample Images, True Labels and Predictions
+plt.figure(figsize=(12, 4))
+for i in range(5):
+    plt.subplot(1, 5, i + 1)
+    plt.imshow(sample_images[i], cmap='gray')
+    plt.title(f"True: {sample_labels[i]}, Predicted: {predicted_classes[i]}")
+    plt.axis('off')
+
+plt.tight_layout()
+plt.show()
